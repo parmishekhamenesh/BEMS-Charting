@@ -1,0 +1,1940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NextWave – Charting</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:13px;background:#f0f2f5;color:#2d3748;display:flex;height:100vh;overflow:hidden}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:220px;min-width:220px;background:#1a2236;color:#c8d0e0;display:flex;flex-direction:column;height:100vh;overflow-y:auto}
+  .sidebar-logo{padding:14px 16px;border-bottom:1px solid #263050;display:flex;align-items:center;gap:10px}
+  .sidebar-logo img{width:28px;height:28px;border-radius:4px;object-fit:cover}
+  .logo-text{font-size:11px;font-weight:700;color:#fff;line-height:1.3;text-transform:uppercase;letter-spacing:.3px}
+  .logo-sub{font-size:9px;color:#7a8aaa;font-weight:400;text-transform:uppercase;letter-spacing:.5px}
+  .sidebar-nav{padding:8px 0}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;cursor:pointer;color:#9aabcc;font-size:12.5px;transition:all .15s;position:relative}
+  .nav-item:hover,.nav-item.active{background:#263050;color:#fff}
+  .nav-item.active{border-left:2px solid #4A90D9}
+  .nav-icon{width:15px;text-align:center;font-size:14px}
+  .badge{background:#e53e3e;color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:10px;margin-left:auto}
+  .sidebar-section{padding:6px 16px 2px;font-size:10px;font-weight:700;color:#566a8a;letter-spacing:.7px;text-transform:uppercase;margin-top:4px}
+  .site-tree{padding:0 0 8px}
+  .tree-country{display:flex;align-items:center;gap:6px;padding:5px 16px;cursor:pointer;color:#8899bb;font-size:12px}
+  .tree-country:hover{color:#c8d0e0}
+  .tree-flag{font-size:12px}
+  .tree-site{display:flex;align-items:center;gap:6px;padding:4px 16px 4px 32px;cursor:pointer;color:#8899bb;font-size:12px}
+  .tree-site:hover{color:#c8d0e0}
+  .tree-location{display:flex;align-items:center;gap:6px;padding:3px 16px 3px 44px;cursor:pointer;color:#8899bb;font-size:11.5px;border-radius:0}
+  .tree-location:hover,.tree-location.active{background:#263050;color:#fff}
+  .tree-location.active{border-left:2px solid #4A90D9}
+  .loc-dot{width:6px;height:6px;background:#4A90D9;border-radius:50%;flex-shrink:0}
+  .sidebar-footer{margin-top:auto;padding:12px 16px;border-top:1px solid #263050;font-size:11px;color:#566a8a}
+  .expand-btn{display:flex;align-items:center;gap:6px;margin-top:6px;color:#7a8aaa;cursor:pointer;font-size:11px}
+
+  /* ── MAIN AREA ── */
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+  /* ── TOP NAV ── */
+  .topnav{background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding:0 20px;height:46px;gap:0;flex-shrink:0}
+  .topnav-tabs{display:flex;align-items:stretch;gap:0;height:100%}
+  .tab{display:flex;align-items:center;gap:6px;padding:0 14px;font-size:12.5px;color:#718096;cursor:pointer;border-bottom:2px solid transparent;height:100%;white-space:nowrap;transition:all .15s}
+  .tab:hover{color:#2d3748}
+  .tab.active{color:#4A90D9;border-bottom-color:#4A90D9;font-weight:600}
+  .tab-icon{font-size:13px}
+  .badge-red{background:#e53e3e;color:#fff;font-size:9px;padding:1px 5px;border-radius:10px;font-weight:700}
+  .topnav-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .bell-btn{background:none;border:none;cursor:pointer;font-size:16px;color:#718096;position:relative}
+  .bell-badge{position:absolute;top:-2px;right:-4px;background:#e53e3e;color:#fff;font-size:8px;padding:0 3px;border-radius:8px;font-weight:700}
+  .user-btn{display:flex;align-items:center;gap:6px;background:#4A90D9;color:#fff;border:none;border-radius:5px;padding:5px 10px;cursor:pointer;font-size:12px;font-weight:600}
+  .lang-btn{background:none;border:1px solid #e2e8f0;border-radius:4px;padding:4px 8px;cursor:pointer;font-size:12px;color:#718096}
+
+  /* ── BREADCRUMB ── */
+  .breadcrumb{background:#fff;border-bottom:1px solid #e2e8f0;padding:7px 20px;font-size:12px;color:#718096;flex-shrink:0}
+  .breadcrumb a{color:#4A90D9;text-decoration:none}
+  .breadcrumb span{color:#4A90D9}
+
+  /* ── FILTER PANELS ── */
+  .filter-row{display:flex;gap:0;flex-shrink:0;background:#fff;border-bottom:1px solid #e2e8f0;max-height:340px}
+  .panel{background:#fff;border-right:1px solid #e2e8f0}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#2d3748;color:#fff;font-size:12px;font-weight:600;cursor:pointer;gap:8px}
+  .panel-header select{background:#1a2236;color:#fff;border:none;font-size:11px;padding:2px 4px;border-radius:3px;cursor:pointer}
+  .components-panel{width:280px;min-width:280px}
+  .builtin-panel{flex:1}
+  .panel-search{padding:6px 10px;border-bottom:1px solid #e8ecf0}
+  .panel-search input{width:100%;border:1px solid #dce1e8;border-radius:4px;padding:4px 8px;font-size:12px;outline:none;color:#2d3748}
+  .panel-search input:focus{border-color:#4A90D9}
+  .tree-items{padding:4px 0;overflow-y:auto}
+  .tree-row{display:flex;align-items:center;gap:6px;padding:3px 10px 3px 10px;cursor:pointer;font-size:12px;color:#2d3748}
+  .tree-row:hover{background:#f7f8fa}
+  .tree-row .caret{color:#718096;font-size:10px;width:10px}
+  .tree-row input[type=checkbox]{accent-color:#4A90D9;width:13px;height:13px;cursor:pointer}
+  .tree-row .dot{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+  .tree-group{font-weight:600;color:#1a2236}
+  .tree-child{padding-left:26px}
+  .builtin-inner{display:flex;gap:0;padding:6px 14px;max-height:300px;overflow-y:auto}
+  .builtin-col{min-width:160px;padding-right:20px}
+  .builtin-col-header{font-size:11px;font-weight:700;color:#1a2236;margin-bottom:6px;letter-spacing:.3px}
+  .builtin-row{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px;color:#2d3748;cursor:pointer}
+  .builtin-row:hover{color:#4A90D9}
+  .builtin-row input[type=checkbox]{accent-color:#4A90D9;width:13px;height:13px;cursor:pointer}
+  .builtin-row .dot{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+  .col-divider{width:1px;background:#e8ecf0;margin:0 8px 0 0}
+  .hw-reg{padding:4px 0 4px 8px}
+  .hw-reg-header{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1a2236;margin-bottom:4px}
+
+  /* ── CHART AREA ── */
+  .chart-section{flex:1;overflow:hidden;display:flex;flex-direction:column;padding:0}
+  .chart-tabs{display:flex;align-items:center;gap:0;padding:0 16px;background:#fff;border-bottom:1px solid #e2e8f0;flex-shrink:0}
+  .chart-tab{padding:7px 14px;font-size:12px;color:#718096;cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+  .chart-tab.active{color:#4A90D9;border-bottom-color:#4A90D9;font-weight:600}
+  .chart-toolbar{display:flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;flex-shrink:0}
+  .toolbar-btn{display:flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid #d1d9e0;border-radius:4px;background:#fff;cursor:pointer;font-size:11.5px;color:#4a5568;font-family:inherit;transition:all .15s}
+  .toolbar-btn:hover{background:#f7f8fa;border-color:#b0b8c4}
+  .toggle-group{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#718096}
+  .toggle{width:30px;height:16px;background:#cbd5e0;border-radius:8px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+  .toggle.on{background:#4A90D9}
+  .toggle::after{content:'';position:absolute;width:12px;height:12px;background:#fff;border-radius:50%;top:2px;left:2px;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .toggle.on::after{left:16px}
+  .toolbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+  .lock-btn{background:none;border:none;cursor:pointer;font-size:14px;color:#718096}
+  .range-select{padding:4px 8px;border:1px solid #d1d9e0;border-radius:4px;font-size:11.5px;color:#4a5568;background:#fff;cursor:pointer;font-family:inherit}
+  .date-nav{display:flex;align-items:center;gap:4px;font-size:11.5px;color:#4a5568;background:#fff;border:1px solid #d1d9e0;border-radius:4px;padding:3px 6px}
+  .date-nav button{background:none;border:none;cursor:pointer;color:#4a5568;font-size:13px;padding:0 2px}
+  .menu-btn{background:none;border:none;cursor:pointer;font-size:16px;color:#718096}
+  .granularity-select{padding:4px 8px;border:1px solid #d1d9e0;border-radius:4px;font-size:11.5px;color:#4a5568;background:#fff;cursor:pointer;font-family:inherit}
+  .granularity-select:disabled{opacity:.4;cursor:not-allowed}
+  .range-select option:disabled,.granularity-select option:disabled{color:#b0b8c4;}
+
+  /* phase-strip replaced by phase-panel above */
+
+
+  /* Figma-editable text sections */
+  [data-figma="text-layer"]{position:relative;z-index:1}
+  [contenteditable]{outline:none;cursor:default;user-select:text}
+  [contenteditable]:focus{outline:none;box-shadow:none}
+  /* ── CHART CANVAS ── */
+  .chart-wrap{flex:1;position:relative;background:#fff;padding:10px 10px 0 0;min-height:200px;overflow:hidden;isolation:isolate;contain:layout paint}
+  canvas{display:block;width:100%!important;isolation:isolate}
+
+  .phase-panel{display:none;flex-shrink:0;background:#f8fafc;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:8px 16px}
+  .phase-panel.visible{display:flex;gap:24px;align-items:flex-start}
+  .phase-block{flex:1;min-width:0}
+  .phase-block-title{font-size:9px;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .phase-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+  .phase-row-label{font-size:11px;font-weight:600;color:#4a5568;min-width:52px;display:flex;align-items:center;gap:5px;flex-shrink:0}
+  .phase-highest-pill{font-size:8px;font-weight:700;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:3px;padding:0px 4px;line-height:14px}
+  .phase-bar-track{flex:1;height:4px;background:#edf0f5;border-radius:2px;overflow:hidden}
+  .phase-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+  .phase-row-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;min-width:38px;text-align:right;flex-shrink:0}
+  .phase-row-ts{font-size:9px;color:#a0aec0;margin-left:52px;margin-bottom:2px;margin-top:-2px}
+  .phase-thresh-legend{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:7px 10px;min-width:170px;flex-shrink:0;align-self:center;text-align:left}
+  .phase-thresh-title{font-size:9px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+  .ptl-row{display:flex;align-items:center;gap:5px;font-size:10px;line-height:1.6}
+  .ptl-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .phase-divider{width:1px;background:#e8ecf0;align-self:stretch;margin:0 4px}
+
+  /* ── TOOLTIP STRIP ── */
+  .tooltip-strip{background:#fff;border-top:1px solid #e2e8f0;padding:7px 20px;display:flex;gap:24px;flex-shrink:0;flex-wrap:wrap;align-items:flex-start}
+  .tooltip-block{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .tooltip-date{font-size:11px;font-weight:700;color:#2d3748;margin-bottom:4px}
+  .tooltip-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:#4a5568}
+  .tooltip-swatch{width:14px;height:10px;border-radius:2px;flex-shrink:0}
+  .tooltip-label{color:#718096;word-break:break-word}
+  .tooltip-val{font-weight:600;color:#2d3748}
+
+  /* ── TABLE VIEW ── */
+  .table-wrap{flex:1;overflow:auto;background:#fff;display:none}
+  .table-wrap.visible{display:block}
+  table{width:100%;border-collapse:collapse}
+  th{background:#f7f8fa;border-bottom:2px solid #e2e8f0;padding:8px 14px;text-align:left;font-size:11.5px;font-weight:700;color:#4a5568;position:sticky;top:0}
+  td{padding:7px 14px;border-bottom:1px solid #f0f2f5;font-size:12px;color:#2d3748}
+  tr:hover td{background:#f7f9fc}
+  .sev-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+  .sev-sag{background:#fff3cd;color:#92400e}
+  .sev-swell{background:#dbeafe;color:#1e40af}
+
+  /* ── DROPDOWN PORTAL ── */
+  .dropdown-menu{position:fixed;background:#fff;border:1px solid #e2e8f0;border-radius:6px;box-shadow:0 4px 20px rgba(0,0,0,.12);z-index:9999;min-width:160px;padding:4px 0;display:none}
+  .dropdown-menu.open{display:block}
+  .dropdown-item{padding:7px 14px;font-size:12.5px;color:#2d3748;cursor:pointer;display:flex;align-items:center;gap:8px}
+  .dropdown-item:hover{background:#f7f8fa}
+  .dropdown-item.active{color:#4A90D9;font-weight:600}
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar{width:4px;height:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:2px}
+
+  /* ── KPI label chip ── */
+  .kpi-mode-label{background:#edf2ff;color:#4A90D9;font-size:10px;font-weight:700;padding:2px 7px;border-radius:3px;letter-spacing:.3px;text-transform:uppercase}
+
+  .disabled-note{font-size:11px;color:#a0aec0;font-style:italic;margin-left:4px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#4A90D9,#2c5f8a);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:14px">N</div>
+    <div>
+      <div class="logo-text">NextWave</div>
+      <div class="logo-sub">Energy Monitoring</div>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-item"><span class="nav-icon">⊞</span> Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">🔔</span> Alerts <span class="badge">99+</span></div>
+    <div class="nav-item"><span class="nav-icon">◫</span> Portfolio</div>
+  </div>
+  <div style="padding:8px 10px 4px">
+    <div style="display:flex;align-items:center;gap:6px;background:#263050;border-radius:5px;padding:5px 8px">
+      <span style="color:#7a8aaa;font-size:13px">🔍</span>
+      <input style="background:none;border:none;outline:none;color:#c8d0e0;font-size:12px;width:100%" placeholder="Search..." />
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 14px 2px">
+    <span style="font-size:11px;color:#566a8a;font-weight:700;letter-spacing:.5px;text-transform:uppercase">Sites</span>
+    <select style="background:#1a2236;border:1px solid #263050;color:#9aabcc;font-size:10px;border-radius:3px;padding:1px 4px">
+      <option>Site Name</option>
+    </select>
+  </div>
+  <div class="site-tree">
+    <div class="tree-country"><span class="tree-flag">🇺🇸</span> USA ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 Hundal ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 De Pue Warehouse Co ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 NW ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 Cenergy Power ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 City Of San Diego ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 Nusil Technology ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 Brookfield US ▾</div>
+    <div class="tree-site" style="padding-left:24px">🏢 Costco Wholesale ▾</div>
+    <div class="tree-location" style="padding-left:40px"><span class="loc-dot"></span> Costco – Albuquerque I (#116)</div>
+    <div class="tree-location active" style="padding-left:40px"><span class="loc-dot"></span> Costco – Albuquerque II (#667)</div>
+    <div class="tree-location" style="padding-left:40px"><span class="loc-dot"></span> Costco – Albuquerque III Carport (#1016)</div>
+    <div class="tree-location" style="padding-left:40px"><span class="loc-dot"></span> Costco – Almaden (#470)</div>
+    <div class="tree-location" style="padding-left:40px"><span class="loc-dot"></span> Costco – Antioch (#1002)</div>
+  </div>
+  <div class="sidebar-footer">
+    Support
+    <div class="expand-btn">Expand All ▾</div>
+    <div style="margin-top:8px;font-size:10px;color:#3d4f6a">Powered By Next Wave Energy Monitoring, Inc.</div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOP NAV -->
+  <div class="topnav">
+    <div class="topnav-tabs">
+      <div class="tab"><span class="tab-icon">⊞</span> Site Overview</div>
+      <div class="tab"><span class="tab-icon">📱</span> Devices</div>
+      <div class="tab"><span class="tab-icon">🔔</span> Alerts <span class="badge-red">1</span></div>
+      <div class="tab active"><span class="tab-icon">📈</span> Charting</div>
+      <div class="tab"><span class="tab-icon">⚙</span> Config ▾</div>
+    </div>
+    <div class="topnav-right">
+      <button class="bell-btn">🔔<span class="bell-badge">3</span></button>
+      <button class="user-btn">👤 Parmis Hekhamenesh ▾</button>
+      <button class="lang-btn">🌐 EN ▾</button>
+    </div>
+  </div>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb">
+    Sites &rsaquo; <a href="#">Costco – Albuquerque II (#667)</a> &rsaquo; <span>Charting</span>
+  </div>
+
+  <!-- FILTER ROW -->
+  <div class="filter-row">
+    <!-- Components Panel -->
+    <div class="panel components-panel">
+      <div class="panel-header">
+        <span>Components</span>
+        <select id="siteSelect" style="background:#1a2236;color:#fff;border:none;font-size:11px;padding:2px 4px;border-radius:3px;cursor:pointer">
+          <option>Costco – Albuquerque II (#667)</option>
+        </select>
+      </div>
+      <div class="panel-search"><input placeholder="Search Components..." /></div>
+      <div class="tree-items">
+        <!-- PV System Inverter -->
+        <div class="tree-row tree-group">
+          <span class="caret">▶</span>
+          <input type="checkbox" id="cb_pv" />
+          <span>PV System Inverter (1)</span>
+        </div>
+        <!-- Production Meter -->
+        <div class="tree-row tree-group">
+          <span class="caret">▶</span>
+          <input type="checkbox" id="cb_prod" />
+          <span>Production Meter (1)</span>
+        </div>
+        <!-- Weather Station -->
+        <div class="tree-row tree-group">
+          <span class="caret">▼</span>
+          <input type="checkbox" id="cb_ws" />
+          <span>Weather Station (1)</span>
+        </div>
+        <div class="tree-row tree-child">
+          <span class="caret"></span>
+          <input type="checkbox" id="cb_irr" checked />
+          <div class="dot" style="background:#4a90d9"></div>
+          <span>Solar Irradiance</span>
+        </div>
+        <!-- System -->
+        <div class="tree-row tree-group">
+          <span class="caret">▶</span>
+          <input type="checkbox" id="cb_sys" />
+          <span>System (1)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Built-In Panel -->
+    <div class="panel builtin-panel">
+      <div class="panel-header" style="justify-content:flex-start;gap:12px">
+        <span>Built-In</span>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="toolbar-btn" style="border:none;background:#3a4a63;color:#fff;font-size:11px">⚙ Save Filter</button>
+          <button class="toolbar-btn" style="border:none;background:#3a4a63;color:#fff;font-size:11px">✕ Clear Filter</button>
+        </div>
+      </div>
+      <div class="panel-search"><input placeholder="Search Built-In..." /></div>
+      <div class="builtin-inner">
+        <!-- Measurements -->
+        <div class="builtin-col">
+          <div class="builtin-col-header">Measurements</div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_meas_ac" /><span style="font-size:10px;font-weight:600;color:#718096">AC</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_meas_dc" /><span style="font-size:10px;font-weight:600;color:#718096">DC</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_panel_temp" /><span>Panel Temperature</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_solar_irr2" checked />
+            <div class="dot" style="background:#4a90d9"></div>
+            <span>Solar Irradiance</span>
+          </div>
+        </div>
+        <div class="col-divider"></div>
+        <!-- Calculations (NEW KPIs added here) -->
+        <div class="builtin-col">
+          <div class="builtin-col-header">Calculations</div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_avg_inso" /><span>Avg Daily Solar Insolation</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_inso" /><span>Solar Insolation</span>
+          </div>
+          <!-- NEW KPIs -->
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #e8ecf0">
+            <div style="font-size:10px;font-weight:700;color:#718096;margin-bottom:4px">Energy KPIs <span class="kpi-mode-label">NEW</span></div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_eui" onchange="handlePeriodKPIChange(this,'eui')" />
+              <span>EUI</span>
+            </div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_lf" onchange="handlePeriodKPIChange(this,'lf')" />
+              <span>Load Factor</span>
+            </div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_pd" onchange="handlePeriodKPIChange(this,'pd')" />
+              <span>Peak Demand</span>
+            </div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_mom" onchange="handlePeriodKPIChange(this,'mom')" />
+              <span>Energy Change</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-divider"></div>
+        <!-- Power Quality (replaces Losses) -->
+        <div class="builtin-col">
+          <div class="builtin-col-header">Power Quality <span class="kpi-mode-label">NEW</span></div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_vunbal" onchange="handlePQContinuousChange(this,'vunbal')" />
+            <span>Voltage Unbalance</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_cunbal" onchange="handlePQContinuousChange(this,'cunbal')" />
+            <span>Current Unbalance</span>
+          </div>
+          <div class="builtin-row">
+            <input type="checkbox" id="cb_pf" onchange="handlePQContinuousChange(this,'pf')" />
+            <span>Power Factor</span>
+          </div>
+          <div style="margin-top:6px;padding-top:6px;border-top:1px dashed #e8ecf0">
+            <div style="font-size:10px;font-weight:700;color:#718096;margin-bottom:4px">Power Quality Events</div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_sag" onchange="handlePQEventChange()" />
+              <span>Sag</span>
+            </div>
+            <div class="builtin-row">
+              <input type="checkbox" id="cb_swell" onchange="handlePQEventChange()" />
+              <span>Swell</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-divider"></div>
+        <!-- Hardware Register -->
+        <div class="builtin-col">
+          <div class="builtin-col-header">Hardware Register</div>
+          <div class="hw-reg">
+            <div class="hw-reg-header">
+              <input type="checkbox" checked style="accent-color:#4A90D9;width:13px;height:13px" />
+              <div class="dot" style="background:#2d3748"></div>
+              <span>Virtual Meter</span>
+            </div>
+            <div class="builtin-row" style="padding-left:14px">
+              <input type="checkbox" id="cb_ac_power" /><span>AC_Power</span>
+            </div>
+            <div class="builtin-row" style="padding-left:14px">
+              <input type="checkbox" id="cb_energy" /><span>Energy</span>
+            </div>
+            <div class="builtin-row" style="padding-left:14px">
+              <input type="checkbox" id="cb_exp_energy" /><span>Expected Energy</span>
+            </div>
+            <div class="builtin-row" style="padding-left:14px">
+              <input type="checkbox" id="cb_exp_power" /><span>Expected Power</span>
+            </div>
+            <div class="builtin-row" style="padding-left:14px">
+              <input type="checkbox" id="cb_meas_prod" checked />
+              <div class="dot" style="background:#1a2236"></div>
+              <span>Measured Production</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /filter-row -->
+
+  <!-- CHART SECTION -->
+  <div class="chart-section">
+    <!-- Chart / Table tabs -->
+    <div class="chart-tabs">
+      <div class="chart-tab active" id="chartTabBtn" onclick="switchView('chart')">Chart</div>
+      <div class="chart-tab" id="tableTabBtn" onclick="switchView('table')">Table</div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="chart-toolbar">
+      <button class="toolbar-btn">⬇</button>
+      <button class="toolbar-btn">⚙ Setting</button>
+      <button class="toolbar-btn">↑ Export</button>
+      <select class="range-select" id="sortSelect">
+        <option>Name – Ascending</option>
+        <option>Name – Descending</option>
+      </select>
+      <div class="toggle-group">
+        <div class="toggle" id="tog_expkw" onclick="this.classList.toggle('on')"></div> Expected kW
+      </div>
+      <div class="toggle-group">
+        <div class="toggle" id="tog_events" onclick="this.classList.toggle('on')"></div> Events
+      </div>
+      <div class="toggle-group">
+        <div class="toggle" id="tog_filter" onclick="this.classList.toggle('on')"></div> Filter
+      </div>
+      <div class="toggle-group">
+        <div class="toggle on" id="tog_grp" onclick="this.classList.toggle('on')"></div> Group By Field
+      </div>
+      <div class="toggle-group">
+        <div class="toggle" id="tog_dn" onclick="this.classList.toggle('on')"></div> Day/Night
+      </div>
+      <div class="toggle-group">
+        <div class="toggle" id="tog_add" onclick="this.classList.toggle('on')"></div> Show Additional Data
+      </div>
+
+      <div class="toolbar-right">
+        <button class="lock-btn">🔒</button>
+        <!-- Time range -->
+        <select class="range-select" id="timeRangeSelect" onchange="onTimeRangeChange()">
+          <option value="today">Today</option>
+          <option value="3days" selected>3 Days</option>
+          <option value="week">This Week</option>
+          <option value="last-week">Last Week</option>
+          <option value="month">This Month</option>
+          <option value="last-month">Last Month</option>
+          <option value="12months">Last 12 Months</option>
+          <option value="ytd">This Year</option>
+          <option value="last-year">Last Year</option>
+          <option value="lifetime">Lifetime</option>
+          <option value="custom">Custom</option>
+        </select>
+        <!-- Interval -->
+        <select class="granularity-select" id="granSelect" onchange="render()">
+          <option value="1min">1 Minute</option>
+          <option value="5min">5 Minutes</option>
+          <option value="15min" selected>15 Minutes</option>
+          <option value="1hr">1 Hour</option>
+          <option value="day">1 Day</option>
+          <option value="7days">7 Days</option>
+          <option value="month">1 Month</option>
+          <option value="year">1 Year</option>
+        </select>
+        <span id="granDisabledNote" class="disabled-note" style="display:none">Period KPI mode</span>
+        <!-- Date nav -->
+        <div class="date-nav">
+          <button onclick="shiftDate(-1)">&#8592;</button>
+          <span id="dateRangeLabel">Jun 21, 2026 – Jun 23, 2026</span>
+          <button onclick="shiftDate(1)">&#8594;</button>
+        </div>
+        <button class="menu-btn">☰</button>
+      </div>
+    </div>
+
+    <!-- Chart canvas -->
+    <div id="chartView" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="chart-wrap" id="chartWrap">
+        <canvas id="mainChart"></canvas>
+      </div>
+      <!-- Phase panel (shown for unbalance / PF) — below chart, above tooltip -->
+      <div class="phase-panel" id="phasePanel" data-figma="text-layer">
+        <div class="phase-block" id="phasePanelContent" contenteditable="true" spellcheck="false"></div>
+        <div class="phase-divider"></div>
+        <div class="phase-thresh-legend" id="phaseThreshLegend" contenteditable="true" spellcheck="false"></div>
+      </div>
+      <!-- Tooltip strip -->
+      <div class="tooltip-strip" id="tooltipStrip" data-figma="text-layer" contenteditable="true" spellcheck="false">
+        <div class="tooltip-block">
+          <div class="tooltip-date" id="ttDate">06/21/2026 01:00</div>
+          <div class="tooltip-item">
+            <div class="tooltip-swatch" style="background:#4a90d9"></div>
+            <span class="tooltip-label">Kipp&amp;Zonen RT1 Solar Irradiance</span>
+            <span class="tooltip-val" id="ttIrr">0 W/m²</span>
+          </div>
+        </div>
+        <div class="tooltip-block" id="ttBlock2">
+          <div style="height:18px"></div>
+          <div class="tooltip-item">
+            <div class="tooltip-swatch" style="background:#1a2236"></div>
+            <span class="tooltip-label">Virtual Meter Measured Production</span>
+            <span class="tooltip-val" id="ttProd">0 kW</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table view -->
+    <div class="table-wrap" id="tableView">
+      <table id="mainTable">
+        <thead id="tableHead"></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Dropdown menus (portal) -->
+<div class="dropdown-menu" id="dropdownMenu"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────────────────────
+let chartMode = 'irradiance'; // 'irradiance' | 'vunbal' | 'cunbal' | 'pf' | 'pqevents' | 'eui' | 'lf' | 'pd'
+let chartInstance = null;
+let currentView = 'chart';
+
+// ─────────────────────────────────────────────────────────────
+// MOCK DATA GENERATORS
+// ─────────────────────────────────────────────────────────────
+function seededRand(seed){ let x=Math.sin(seed+1)*10000; return x-Math.floor(x); }
+
+function genIrradianceData(pts){
+  const labels=[],irr=[],prod=[];
+  const base=new Date('2026-06-21T00:00:00');
+  for(let i=0;i<pts;i++){
+    const d=new Date(base.getTime()+i*15*60000);
+    labels.push(d);
+    const hr=d.getHours()+(d.getMinutes()/60);
+    const s=Math.max(0,Math.sin(Math.PI*(hr-5)/14));
+    const noise=(seededRand(i*3)*0.12-0.06);
+    const v=Math.max(0,s*1100+noise*200);
+    irr.push(Math.round(v));
+    prod.push(Math.round(v*0.33+seededRand(i*7)*20));
+  }
+  return{labels,irr,prod};
+}
+
+function genUnbalanceData(gran, timeRange, metric){
+  const ptsMap={'1min':1440,'5min':288,'15min':96,'1hr':24};
+  const pts=ptsMap[gran]||96;
+  const intervalMs={'1min':60000,'5min':300000,'15min':900000,'1hr':3600000}[gran]||900000;
+  const labels=[],phA=[],phB=[],phC=[],worstVal=[],worstPh=[],peakTs=[];
+  const base=new Date('2026-06-21T00:00:00');
+  const ranges=metric==='cunbal'
+    ? {a:[1.0,5.5], b:[5.0,14.0], c:[1.8,7.0]}
+    : {a:[0.3,1.8], b:[2.5,4.5],  c:[0.5,2.0]};
+  for(let i=0;i<pts;i++){
+    const d=new Date(base.getTime()+i*intervalMs);
+    labels.push(d);
+    const r=ranges;
+    const hr=d.getHours();
+    const lf=hr>=8&&hr<=18?1.2:0.85;
+    const a=+(Math.min(r.a[1],(r.a[0]+(r.a[1]-r.a[0])*seededRand(i*2)*lf))).toFixed(2);
+    const b=+(Math.min(r.b[1],(r.b[0]+(r.b[1]-r.b[0])*seededRand(i*3+1)*lf))).toFixed(2);
+    const c=+(Math.min(r.c[1],(r.c[0]+(r.c[1]-r.c[0])*seededRand(i*5+2)*lf))).toFixed(2);
+    phA.push(+a); phB.push(+b); phC.push(+c);
+    const mx=Math.max(+a,+b,+c);
+    worstVal.push(mx);
+    worstPh.push(mx===+a?'A':mx===+b?'B':'C');
+    peakTs.push(fmtDT(d));
+  }
+  return{labels,phA,phB,phC,worstVal,worstPh,peakTs};
+}
+
+function genPFData(gran, timeRange){
+  const ptsMap={'1min':1440,'5min':288,'15min':96,'1hr':24};
+  const pts=ptsMap[gran]||96;
+  const intervalMs={'1min':60000,'5min':300000,'15min':900000,'1hr':3600000}[gran]||900000;
+  const labels=[],pfA=[],pfB=[],pfC=[],minTs=[];
+  const base=new Date('2026-06-21T00:00:00');
+  // Phase B runs slightly lower PF (more reactive load), Phase C slightly higher
+  const offsets={A:0, B:-0.015, C:+0.008};
+  for(let i=0;i<pts;i++){
+    const d=new Date(base.getTime()+i*intervalMs);
+    labels.push(d);
+    const hr=d.getHours();
+    const dip=hr>=8&&hr<=18?-0.02:0;
+    const base_v=0.940+dip+seededRand(i*4)*0.045;
+    pfA.push(+Math.min(1,Math.max(0.88,base_v+offsets.A+seededRand(i*7)*0.01)).toFixed(3));
+    pfB.push(+Math.min(1,Math.max(0.88,base_v+offsets.B+seededRand(i*11)*0.01)).toFixed(3));
+    pfC.push(+Math.min(1,Math.max(0.88,base_v+offsets.C+seededRand(i*13)*0.01)).toFixed(3));
+    minTs.push(fmtDT(d));
+  }
+  return{labels,pfA,pfB,pfC,minTs};
+}
+
+function genPQEventData(granularity, timeRange){
+  const periods=getPeriodCount(granularity, timeRange);
+  const labels=[];
+  const sags=[], swells=[];
+  for(let i=0;i<periods;i++){
+    labels.push(getPeriodLabel(granularity, i, timeRange));
+    sags.push(Math.round(seededRand(i*7+3)*8));
+    swells.push(Math.round(seededRand(i*11+5)*4));
+  }
+  return{labels,sags,swells};
+}
+
+function genPeriodData(metric, granularity, timeRange){
+  if(metric==='mom'){
+    const tRange=document.getElementById('timeRangeSelect').value;
+    const isWoW=(tRange==='week'||tRange==='last-week');
+    const isRolling=(tRange==='12months');
+
+    if(isRolling){
+      // Rolling 12 months: bar height = kWh consumed, colour = % change vs prior month
+      const months=['Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25',
+                    'Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26'];
+      const baseKwh=180000;
+      const kwhVals=months.map((_,i)=>Math.round(baseKwh+seededRand(i*13+53)*120000));
+      const pctVals=months.map((_,i)=>+(-8+seededRand(i*7+11)*16).toFixed(1));
+      return{labels:months,current:kwhVals,pctArr:pctVals,prior:[],extra:[],peakTimestamps:[],PORT_AVG:{},isRolling:true};
+    }
+
+    // Scorecard: 2 grouped bars — this period vs prior
+    const baseKwh=isWoW?45000:180000;
+    const rangeKwh=isWoW?30000:120000;
+    const priorKwh=Math.round(baseKwh+seededRand(53)*rangeKwh);
+    const pctChange=+(-8+seededRand(3)*16).toFixed(1);
+    const thisKwh=Math.round(priorKwh*(1+pctChange/100));
+    const thisLabel=isWoW?'This Week (Jun 17–23)':'This Month (Jun 2026)';
+    const priorLabel=isWoW?'Last Week (Jun 10–16)':'Prior Month (May 2026)';
+    return{labels:[thisLabel,priorLabel],current:[thisKwh,priorKwh,pctChange],prior:[],extra:[],peakTimestamps:[],PORT_AVG:{},isRolling:false};
+  }
+
+
+  const periods=getPeriodCount(granularity, timeRange);
+  const labels=[], current=[], prior=[], extra=[], peakTimestamps=[];
+  const PORT_AVG={eui:139, lf:0.68, pd:355};
+  for(let i=0;i<periods;i++){
+    labels.push(getPeriodLabel(granularity, i, timeRange));
+    if(metric==='eui'){
+      current.push(+(88+seededRand(i*3)*80).toFixed(0));
+      prior.push(+(90+seededRand(i*3+50)*80).toFixed(0));
+    } else if(metric==='lf'){
+      current.push(+(0.45+seededRand(i*5)*0.40).toFixed(2));
+      prior.push(+(0.47+seededRand(i*5+50)*0.38).toFixed(2));
+    } else if(metric==='pd'){
+      const pk=+(200+seededRand(i*7)*300).toFixed(0);
+      const av=+(pk*0.45+seededRand(i*11)*pk*0.25).toFixed(0);
+      current.push(pk);
+      prior.push(av);
+      extra.push(+(pk-av).toFixed(0));
+      // Generate a realistic peak timestamp within that period
+      // e.g. Monday 8:47 AM — when compressors/HVAC/equipment all start together
+      const baseDate=new Date('2026-06-01T00:00:00');
+      baseDate.setDate(baseDate.getDate()+i*Math.floor(365/Math.max(periods,1)));
+      const peakHour=7+Math.floor(seededRand(i*19)*3); // 7–9 AM startup spike
+      const peakMin=Math.floor(seededRand(i*23)*59);
+      baseDate.setHours(peakHour,peakMin,0,0);
+      peakTimestamps.push(baseDate.toLocaleDateString('en-US',{month:'short',day:'numeric'})+', '+
+        baseDate.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}));
+    }
+  }
+  return{labels:labels.reverse(),current:current.reverse(),prior:prior.reverse(),extra:extra.reverse(),peakTimestamps:peakTimestamps.reverse(),PORT_AVG};
+}
+
+function getPeriodCount(gran, range){
+  // gran: 1min|5min|15min|1hr|day|7days|month|year
+  // range: today|3days|week|last-week|month|last-month|12months|ytd|lifetime
+  const map={
+    'day':{  today:1,'3days':3,week:7,'last-week':7,month:30,'last-month':30,'12months':365,ytd:180,lifetime:730 },
+    '7days':{ today:1,'3days':1,week:1,'last-week':1,month:4,'last-month':4,'12months':52,ytd:26,lifetime:104 },
+    'month':{ today:1,'3days':1,week:1,'last-week':1,month:1,'last-month':1,'12months':12,ytd:6,lifetime:36 },
+    'year':{  today:1,'3days':1,week:1,'last-week':1,month:1,'last-month':1,'12months':1,ytd:1,lifetime:5 }
+  };
+  return (map[gran]||{[range]:6})[range]||6;
+}
+
+function getPeriodLabel(gran, i, range){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(gran==='month'){
+    const m=new Date(2026,5-i,1);
+    return months[m.getMonth()]+' '+m.getFullYear().toString().slice(2);
+  }
+  if(gran==='7days') return 'Wk '+(26-i);
+  if(gran==='year')  return (2026-i)+'';
+  if(gran==='day'){
+    const d=new Date('2026-06-23'); d.setDate(d.getDate()-i);
+    return (d.getMonth()+1)+'/'+d.getDate();
+  }
+  return 'P'+(i+1);
+}
+
+// ─────────────────────────────────────────────────────────────
+// THRESHOLD HELPERS — 4-zone per spec
+// ─────────────────────────────────────────────────────────────
+const PORT_EUI_AVG=139;
+
+// Voltage Unbalance: <1% Ideal · 1-3% Slightly Elevated · 3-5% Warning · >5% Critical
+function vUnbalColor(v){
+  if(v>=5)  return '#DC2626';
+  if(v>=3)  return '#EA580C';
+  if(v>=1)  return '#D97706';
+  return '#16A34A';
+}
+function vUnbalStatus(v){
+  if(v>=5)  return{label:'Critical',         bg:'#FEF2F2',color:'#DC2626',border:'#FECACA'};
+  if(v>=3)  return{label:'Warning',          bg:'#FFF7ED',color:'#EA580C',border:'#FED7AA'};
+  if(v>=1)  return{label:'Slightly Elevated',bg:'#FFFBEB',color:'#D97706',border:'#FDE68A'};
+  return        {label:'Ideal',              bg:'#F0FDF4',color:'#16A34A',border:'#BBF7D0'};
+}
+// Current Unbalance: <2% Ideal · 2-5% Slightly Elevated · 5-10% Warning · >10% Critical
+function cUnbalColor(v){
+  if(v>=10) return '#DC2626';
+  if(v>=5)  return '#EA580C';
+  if(v>=2)  return '#D97706';
+  return '#16A34A';
+}
+function cUnbalStatus(v){
+  if(v>=10) return{label:'Critical',         bg:'#FEF2F2',color:'#DC2626',border:'#FECACA'};
+  if(v>=5)  return{label:'Warning',          bg:'#FFF7ED',color:'#EA580C',border:'#FED7AA'};
+  if(v>=2)  return{label:'Slightly Elevated',bg:'#FFFBEB',color:'#D97706',border:'#FDE68A'};
+  return        {label:'Ideal',              bg:'#F0FDF4',color:'#16A34A',border:'#BBF7D0'};
+}
+// Power Factor: >=0.97 Good · 0.95-0.97 Approaching · <0.95 Penalty
+function pfColor(v){
+  if(v>=0.97) return '#16A34A';
+  if(v>=0.95) return '#D97706';
+  return '#DC2626';
+}
+function pfStatus(v){
+  if(v>=0.97) return{label:'Good',       bg:'#F0FDF4',color:'#16A34A',border:'#BBF7D0'};
+  if(v>=0.95) return{label:'Approaching',bg:'#FFFBEB',color:'#D97706',border:'#FDE68A'};
+  return        {label:'Penalty',        bg:'#FEF2F2',color:'#DC2626',border:'#FECACA'};
+}
+// Load Factor: >=0.80 Excellent · 0.70-0.80 Good · 0.50-0.70 Average · <0.50 Poor
+function lfColor(v){
+  if(v>=0.70) return '#16A34A';
+  if(v>=0.50) return '#D97706';
+  return '#DC2626';
+}
+function lfStatus(v){
+  if(v>=0.80) return{label:'Excellent',bg:'#F0FDF4',color:'#16A34A',border:'#BBF7D0'};
+  if(v>=0.70) return{label:'Good',     bg:'#F0FDF4',color:'#16A34A',border:'#BBF7D0'};
+  if(v>=0.50) return{label:'Average',  bg:'#FFFBEB',color:'#D97706',border:'#FDE68A'};
+  return        {label:'Poor',         bg:'#FEF2F2',color:'#DC2626',border:'#FECACA'};
+}
+// EUI: color relative to portfolio avg — all 5 tiers per spec
+function euiBarColor(v){
+  const pct=(v/PORT_EUI_AVG-1)*100;
+  if(pct<=-30) return '#16A34A'; // Excellent — >30% below avg
+  if(pct<=-15) return '#16A34A'; // Good — 15-30% below avg
+  if(pct<=15)  return '#D97706'; // Average — within ±15%
+  if(pct<=30)  return '#EA580C'; // Below Target — 15-30% above
+  return '#DC2626';              // Poor — >30% above
+}
+function euiLabel(v){
+  const pct=(v/PORT_EUI_AVG-1)*100;
+  if(pct<=-30) return 'Excellent';
+  if(pct<=-15) return 'Good';
+  if(pct<=15)  return 'Average';
+  if(pct<=30)  return 'Below Target';
+  return 'Poor';
+}
+
+function getThresholdBands(metric){
+  return []; // fills removed — chart stays clean, threshold info in phase panel only
+}
+
+
+// ─────────────────────────────────────────────────────────────
+// CHART RENDERING
+// ─────────────────────────────────────────────────────────────
+function render(){
+  if(currentView==='table'){ renderTable(); return; }
+  // Use rAF so any layout changes (phase panel showing/hiding) settle before we measure
+  requestAnimationFrame(_doRender);
+}
+
+function _doRender(){
+  if(currentView==='table') return;
+  const wrap=document.getElementById('chartWrap');
+  const gran=document.getElementById('granSelect').value;
+  const timeRange=document.getElementById('timeRangeSelect').value;
+
+  if(chartInstance){ chartInstance.destroy(); chartInstance=null; }
+
+  wrap.innerHTML='<canvas id="mainChart"></canvas>';
+  const canvas=document.getElementById('mainChart');
+  const w=wrap.offsetWidth||800;
+  // Height: use chartView total minus tooltip strip, with floor of 200px
+  const chartView=document.getElementById('chartView');
+  const tooltipStrip=document.getElementById('tooltipStrip');
+  const viewH=chartView?chartView.clientHeight:400;
+  const ttH=tooltipStrip?tooltipStrip.offsetHeight:60;
+  const h=Math.max(viewH-ttH-20, 200);
+  canvas.width=w;
+  canvas.height=h;
+
+  const ctx=canvas.getContext('2d');
+  let config;
+
+  if(chartMode==='irradiance'){
+    updateTooltipStrip('irradiance');
+    const ptsMap={'1min':1440,'5min':288,'15min':96,'1hr':24};
+    const pts=ptsMap[gran]||96;
+    const {labels,irr,prod}=genIrradianceData(pts);
+    config={
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Solar Irradiance (W/m²)',data:irr,borderColor:'#4a90d9',backgroundColor:'rgba(74,144,217,0.08)',borderWidth:1.5,pointRadius:0,fill:true,yAxisID:'y'},
+          {label:'Measured Production (kW)',data:prod,borderColor:'#1a2236',backgroundColor:'rgba(26,34,54,0.05)',borderWidth:1.5,pointRadius:0,fill:false,yAxisID:'y2'}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{
+          callbacks:{
+            title:items=>{const d=labels[items[0].dataIndex];return fmtDT(d);}
+          }
+        }},
+        scales:{
+          x:{type:'time',time:{unit:['1min','5min','15min','1hr'].includes(gran)?'hour':'day',displayFormats:{hour:'HH:mm',day:'d. MMM'}},ticks:{maxTicksLimit:12,color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
+          y:{position:'left',title:{display:true,text:'W/m²',color:'#4a90d9',font:{size:10}},ticks:{color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}},
+          y2:{position:'right',title:{display:true,text:'kW',color:'#1a2236',font:{size:10}},ticks:{color:'#718096',font:{size:10}},grid:{display:false}}
+        }
+      }
+    };
+  }
+  else if(chartMode==='vunbal'||chartMode==='cunbal'){
+    const isV=chartMode==='vunbal';
+    const {labels,phA,phB,phC,worstVal,worstPh,peakTs}=genUnbalanceData(gran,timeRange,chartMode);
+    const colorFn=isV?vUnbalColor:cUnbalColor;
+    const statusFn=isV?vUnbalStatus:cUnbalStatus;
+    const maxY=isV?6:16;
+    const yLabel=isV?'Voltage Unbalance (%)':'Current Unbalance (%)';
+
+    // Find the single worst reading across all phases — this is where the vertical indicator goes
+    let peakIdx=0, peakMax=0;
+    worstVal.forEach((v,i)=>{ if(v>peakMax){peakMax=v;peakIdx=i;} });
+
+    const midA=phA[Math.floor(phA.length/2)]||0;
+    const midB=phB[Math.floor(phB.length/2)]||0;
+    const midC=phC[Math.floor(phC.length/2)]||0;
+    const colA=colorFn(midA), colB=colorFn(midB), colC=colorFn(midC);
+
+    // Register peak indicator plugin once
+    if(!window._peakVlineReg){
+      window._peakVlineReg=true;
+      Chart.register({
+        id:'peakVLine',
+        afterDatasetsDraw(chart){
+          const opt=chart.options.plugins.peakVLine;
+          if(!chart.options.plugins||!chart.options.plugins.peakVLine||chart.options.plugins.peakVLine.idx==null) return;
+          const {ctx,chartArea,scales}=chart;
+          if(!scales.x||!chartArea) return;
+          const x=scales.x.getPixelForValue(opt.labels[opt.idx]);
+          if(x<chartArea.left||x>chartArea.right) return;
+          ctx.save();
+          // vertical dashed line
+          ctx.setLineDash([4,3]);
+          ctx.strokeStyle=opt.color+'cc';
+          ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.moveTo(x,chartArea.top);ctx.lineTo(x,chartArea.bottom);ctx.stroke();
+          ctx.setLineDash([]);
+          // small label at top
+          ctx.fillStyle=opt.color;
+          ctx.font='bold 9px system-ui';
+          ctx.textAlign='center';
+          ctx.fillText('↑ Peak Ph '+opt.phase, x, chartArea.top+11);
+          ctx.restore();
+        }
+      });
+    }
+
+    const peakColor=colorFn(peakMax);
+
+    config={
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Phase A',data:phA,borderColor:colA,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+          {label:'Phase B',data:phB,borderColor:colB,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+          {label:'Phase C',data:phC,borderColor:colC,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            callbacks:{
+              title:items=>{const d=labels[items[0].dataIndex];return fmtDT(d);},
+              beforeBody:items=>{
+                const i=items[0].dataIndex;
+                if(i===peakIdx) return[`★ PEAK — Phase ${worstPh[i]}`];
+                return[];
+              },
+              label:ctx=>{
+                const i=ctx.dataIndex;
+                const vals=[phA,phB,phC][ctx.datasetIndex];
+                const v=vals[i]; const st=statusFn(v);
+                return ` ${ctx.dataset.label}: ${v}% — ${st.label}`;
+              },
+              afterBody:items=>{
+                const i=items[0].dataIndex;
+                return[`${i===peakIdx?'Peak':'Worst'}: Phase ${worstPh[i]} · ${peakTs[i]}`];
+              },
+              labelColor:ctx=>{
+                const vals=[phA,phB,phC][ctx.datasetIndex];
+                const col=colorFn(vals[ctx.dataIndex]);
+                return{borderColor:col,backgroundColor:col};
+              }
+            }
+          },
+          thresholdBands:{bands:getThresholdBands(chartMode),maxY},
+          peakVLine:{idx:peakIdx,labels,phase:worstPh[peakIdx],color:peakColor}
+        },
+        scales:{
+          x:{type:'time',time:{unit:['1min','5min','15min','1hr'].includes(gran)?'hour':'day',displayFormats:{hour:'HH:mm',day:'d. MMM'}},ticks:{maxTicksLimit:12,color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.03)'}},
+          y:{min:0,max:maxY,
+             title:{display:true,text:yLabel,color:'#718096',font:{size:10}},
+             ticks:{color:'#718096',font:{size:10},callback:v=>v+'%'},
+             grid:{color:'rgba(0,0,0,0.04)'}}
+        }
+      }
+    };
+    registerBandPlugin();
+    updatePhasePanel(chartMode,phA,phB,phC,peakTs);
+    updateTooltipStrip(chartMode);
+  }
+  else if(chartMode==='pf'){
+    const {labels,pfA,pfB,pfC,minTs}=genPFData(gran,timeRange);
+    // Each phase line coloured by its median PF threshold
+    const colA=pfColor(pfA[Math.floor(pfA.length/2)]||0.95);
+    const colB=pfColor(pfB[Math.floor(pfB.length/2)]||0.95);
+    const colC=pfColor(pfC[Math.floor(pfC.length/2)]||0.95);
+
+    config={
+      type:'line',
+      data:{
+        labels,
+        datasets:[
+          {label:'Phase A',data:pfA,borderColor:colA,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+          {label:'Phase B',data:pfB,borderColor:colB,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
+          {label:'Phase C',data:pfC,borderColor:colC,backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            callbacks:{
+              title:items=>{const d=labels[items[0].dataIndex];return fmtDT(d);},
+              label:ctx=>{
+                const vals=[pfA,pfB,pfC][ctx.datasetIndex];
+                const v=vals[ctx.dataIndex]; const st=pfStatus(v);
+                return ` ${ctx.dataset.label}: ${v} — ${st.label}`;
+              },
+              afterBody:items=>{
+                const i=items[0].dataIndex;
+                return[`Timestamp: ${minTs[i]}`];
+              },
+              labelColor:ctx=>{
+                const vals=[pfA,pfB,pfC][ctx.datasetIndex];
+                const col=pfColor(vals[ctx.dataIndex]);
+                return{borderColor:col,backgroundColor:col};
+              }
+            }
+          },
+          thresholdBands:{bands:getThresholdBands('pf'),maxY:1.0}
+        },
+        scales:{
+          x:{type:'time',time:{unit:['1min','5min','15min','1hr'].includes(gran)?'hour':'day',displayFormats:{hour:'HH:mm',day:'d. MMM'}},ticks:{maxTicksLimit:12,color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}},
+          y:{min:0.88,max:1.0,
+             title:{display:true,text:'Power Factor',color:'#718096',font:{size:10}},
+             ticks:{color:'#718096',font:{size:10},callback:v=>v.toFixed(2)},
+             grid:{color:'rgba(0,0,0,0.04)'}}
+        }
+      }
+    };
+    registerBandPlugin();
+    updatePhasePanel('pf',pfA,pfB,pfC,minTs);
+    updateTooltipStrip('pf');
+  }
+  else if(chartMode==='pqevents'){
+    updateTooltipStrip('pqevents');
+    const sagChecked=document.getElementById('cb_sag').checked;
+    const swellChecked=document.getElementById('cb_swell').checked;
+    const {labels,sags,swells}=genPQEventData(gran,timeRange);
+    const datasets=[];
+    if(sagChecked) datasets.push({label:'Sag Count',data:sags,backgroundColor:'rgba(100,116,139,0.7)',borderColor:'#64748B',borderWidth:1,borderRadius:3});
+    if(swellChecked) datasets.push({label:'Swell Count',data:swells,backgroundColor:'rgba(148,163,184,0.65)',borderColor:'#94A3B8',borderWidth:1,borderRadius:3});
+    config={
+      type:'bar',
+      data:{labels,datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11},color:'#4a5568'}}},
+        scales:{
+          x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+          y:{beginAtZero:true,title:{display:true,text:'Event Count',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:10},stepSize:1},grid:{color:'rgba(0,0,0,0.05)'}}
+        }
+      }
+    };
+  }
+  else if(['eui','lf','pd','mom'].includes(chartMode)){
+    updateTooltipStrip(chartMode);
+    const {labels,current,prior,extra,peakTimestamps,PORT_AVG}=genPeriodData(chartMode,gran,timeRange);
+    const meta=getPeriodMeta(chartMode);
+
+    if(chartMode==='mom'){
+      function momColor(v){ return v<=-3?'#16A34A':v<=0?'#D97706':'#DC2626'; }
+      function momLabel(v){ return v<=-3?'On Target':v<=0?'Improving':'Increasing'; }
+
+      const isRolling=!!current.isRolling; // flag from genPeriodData... actually check via length
+      // Rolling = 12 bars of % change; Scorecard = 2 bars of kWh
+      const tRangeVal=document.getElementById('timeRangeSelect').value;
+      const rolling=(tRangeVal==='12months');
+
+      if(!window._momZeroReg){
+        window._momZeroReg=true;
+        Chart.register({
+          id:'momZeroLine',
+          afterDraw(chart){
+            if(!chart.options.plugins||!chart.options.plugins.momZeroLine) return;
+            const {ctx,chartArea,scales}=chart;
+            if(!scales.y||!chartArea) return;
+            ctx.save();
+            // Zero line
+            const y0=scales.y.getPixelForValue(0);
+            if(y0>=chartArea.top&&y0<=chartArea.bottom){
+              ctx.strokeStyle='#374151';ctx.lineWidth=1.5;
+              ctx.beginPath();ctx.moveTo(chartArea.left,y0);ctx.lineTo(chartArea.right,y0);ctx.stroke();
+            }
+            // -3% target dashed
+            const yT=scales.y.getPixelForValue(-3);
+            if(yT>=chartArea.top&&yT<=chartArea.bottom){
+              ctx.setLineDash([4,3]);ctx.strokeStyle='#16A34A88';ctx.lineWidth=1;
+              ctx.beginPath();ctx.moveTo(chartArea.left,yT);ctx.lineTo(chartArea.right,yT);ctx.stroke();
+              ctx.setLineDash([]);ctx.fillStyle='#16A34A';ctx.font='9px system-ui';
+              ctx.fillText('-3% target',chartArea.left+4,yT-3);
+            }
+            ctx.restore();
+          }
+        });
+      }
+
+      if(rolling){
+        // Rolling 12 months: single bar per month = % change vs prior month, threshold-coloured
+        const {pctArr}=genPeriodData('mom',gran,timeRange);
+        const barColors=current.map((_,i)=>momColor(pctArr[i])+'cc');
+        const barBorders=current.map((_,i)=>momColor(pctArr[i]));
+        config={
+          type:'bar',
+          data:{labels,datasets:[{
+            label:'Energy Consumption (kWh)',
+            data:current,
+            backgroundColor:barColors,
+            borderColor:barBorders,
+            borderWidth:1.5,borderRadius:4
+          }]},
+          options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{
+              legend:{display:false},
+              tooltip:{callbacks:{
+                title:items=>`${labels[items[0].dataIndex]}`,
+                label:ctx=>{
+                  const i=ctx.dataIndex;
+                  const pct=pctArr[i];
+                  return[
+                    ` ${ctx.raw.toLocaleString()} kWh`,
+                    ` ${pct>0?'+':''}${pct}% vs prior month — ${momLabel(pct)}`
+                  ];
+                }
+              }}
+            },
+            scales:{
+              x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+              y:{beginAtZero:true,
+                 title:{display:true,text:'Energy Consumption (kWh)',color:'#718096',font:{size:10}},
+                 ticks:{color:'#718096',font:{size:10},callback:v=>(v/1000).toFixed(0)+'k'},
+                 grid:{color:'rgba(0,0,0,0.04)'}}
+            }
+          }
+        };
+      } else {
+        // Scorecard: single % change bar — kWh values in tooltip
+        const thisKwh=current[0], priorKwh=current[1], pctChange=current[2];
+        const thisLabel=labels[0];
+        const isWoW=thisLabel.includes('Week');
+        const thisColor=momColor(pctChange);
+        const periodLabel=isWoW?'This Week vs Last Week':'This Month vs Prior Month';
+        const thisTitle=isWoW?'This Week':'This Month';
+        const priorTitle=isWoW?'Last Week':'Prior Month';
+        config={
+          type:'bar',
+          data:{
+            labels:[periodLabel],
+            datasets:[
+              {label:thisTitle,data:[thisKwh],backgroundColor:thisColor+'cc',borderColor:thisColor,borderWidth:1.5,borderRadius:4},
+              {label:priorTitle,data:[priorKwh],backgroundColor:'rgba(156,163,175,0.5)',borderColor:'#9CA3AF',borderWidth:1.5,borderRadius:4}
+            ]
+          },
+          options:{
+            responsive:true,maintainAspectRatio:false,
+            plugins:{
+              legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11},color:'#4a5568'}},
+              tooltip:{callbacks:{
+                title:()=>periodLabel,
+                label:ctx=>{
+                  const v=ctx.raw;
+                  if(ctx.datasetIndex===0)
+                    return ` ${thisTitle}: ${v.toLocaleString()} kWh  (${pctChange>0?'+':''}${pctChange}% vs prior — ${momLabel(pctChange)})`;
+                  return ` ${priorTitle}: ${v.toLocaleString()} kWh`;
+                }
+              }}
+            },
+            scales:{
+              x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+              y:{beginAtZero:true,
+                 title:{display:true,text:'Energy Consumption (kWh)',color:'#718096',font:{size:10}},
+                 ticks:{color:'#718096',font:{size:10},callback:v=>(v/1000).toFixed(0)+'k'},
+                 grid:{color:'rgba(0,0,0,0.04)'}}
+            }
+          }
+        };
+      }
+    } else if(chartMode==='pd'){
+      // Peak Demand: grouped bar — Peak kW (red) + Avg kW (blue) per period
+      config={
+        type:'bar',
+        data:{
+          labels,
+          datasets:[
+            {label:'Peak kW (highest 5-min)',data:current,backgroundColor:'rgba(55,65,81,0.75)',borderColor:'#374151',borderWidth:1,borderRadius:3},
+            {label:'Avg kW',data:prior,backgroundColor:'rgba(156,163,175,0.6)',borderColor:'#9CA3AF',borderWidth:1,borderRadius:3}
+          ]
+        },
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{display:true,position:'bottom',labels:{boxWidth:12,font:{size:11},color:'#4a5568'}},
+            tooltip:{
+              callbacks:{
+                title:items=>[`Period: ${labels[items[0].dataIndex]}`],
+                afterBody:items=>{
+                  const i=items[0].dataIndex;
+                  // Only show peak timestamp on the Peak kW dataset (index 0)
+                  if(items[0].datasetIndex===0&&peakTimestamps[i])
+                    return[`Peak occurred: ${peakTimestamps[i]}`];
+                  return[];
+                }
+              }
+            }
+          },
+          scales:{
+            x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+            y:{beginAtZero:true,title:{display:true,text:'kW',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
+          }
+        }
+      };
+    } else if(chartMode==='lf'){
+      // Load Factor: bar per period, each bar color-coded by threshold zone
+      const barColors=current.map(v=>lfStatus(v).color+'cc');
+      const barBorders=current.map(v=>lfStatus(v).color);
+      config={
+        type:'bar',
+        data:{labels,datasets:[{
+          label:'Load Factor',data:current,
+          backgroundColor:barColors,borderColor:barBorders,borderWidth:1.5,borderRadius:4
+        }]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              callbacks:{
+                title:items=>`${labels[items[0].dataIndex]}`,
+                label:ctx=>{
+                  const v=ctx.raw; const st=lfStatus(v);
+                  return ` Load Factor: ${v} — ${st.label}`;
+                }
+              }
+            },
+            lfThreshLines:undefined
+          },
+          scales:{
+            x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+            y:{min:0,max:1.0,title:{display:true,text:'Load Factor (0–1)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:10},callback:v=>v.toFixed(1)},grid:{color:'rgba(0,0,0,0.04)'}}
+          }
+        }
+      };
+      config.options.plugins.lfThreshLines=undefined;
+    } else {
+      // EUI: bar per period, each bar color-coded vs portfolio average (PORT_EUI_AVG=139)
+      const barColors=current.map(v=>euiBarColor(v)+'cc');
+      const barBorders=current.map(v=>euiBarColor(v));
+      config={
+        type:'bar',
+        data:{labels,datasets:[{
+          label:'EUI (kWh/m²)',data:current,
+          backgroundColor:barColors,borderColor:barBorders,borderWidth:1.5,borderRadius:4
+        }]},
+        options:{
+          responsive:true,maintainAspectRatio:false,
+          plugins:{
+            legend:{display:false},
+            tooltip:{
+              callbacks:{
+                title:items=>`${labels[items[0].dataIndex]}`,
+                label:ctx=>{
+                  const v=ctx.raw;
+                  const pct=((v/PORT_EUI_AVG-1)*100).toFixed(1);
+                  const lbl=euiLabel(v);
+                  return ` EUI: ${v} kWh/m² — ${lbl} (${pct>0?'+':''}${pct}% vs portfolio avg ${PORT_EUI_AVG})`;
+                }
+              }
+            },
+            euiPortLine:undefined
+          },
+          scales:{
+            x:{ticks:{color:'#718096',font:{size:11}},grid:{display:false}},
+            y:{beginAtZero:true,title:{display:true,text:'EUI (kWh/m²)',color:'#718096',font:{size:10}},ticks:{color:'#718096',font:{size:10}},grid:{color:'rgba(0,0,0,0.04)'}}
+          }
+        }
+      };
+      const euiPortPlugin={
+        id:'euiPortLineInline',
+        afterDraw(chart){
+          const {ctx,chartArea,scales}=chart;
+          if(!scales.y||!chartArea) return;
+          const y=scales.y.getPixelForValue(PORT_EUI_AVG);
+          if(y<chartArea.top||y>chartArea.bottom) return;
+          ctx.save();
+          ctx.setLineDash([5,4]);ctx.strokeStyle='#718096aa';ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.moveTo(chartArea.left,y);ctx.lineTo(chartArea.right,y);ctx.stroke();
+          ctx.setLineDash([]);ctx.fillStyle='#718096';ctx.font='bold 9px system-ui';
+          ctx.fillText(`Portfolio avg: ${PORT_EUI_AVG}`,chartArea.left+6,y-4);
+          ctx.restore();
+        }
+      };
+      config.plugins=[euiPortPlugin];
+    }
+  }
+
+  if(config){
+    chartInstance=new Chart(ctx,config);
+  }
+}
+
+function getPeriodMeta(m){
+  if(m==='eui') return{unit:'kWh/m²',color:'#16A34A'};
+  if(m==='lf')  return{unit:'Load Factor',color:'#16A34A'};
+  if(m==='pd')  return{unit:'Peak Demand (kW)',color:'#DC2626'};
+  return{unit:'',color:'#4a90d9'};
+}
+
+// ─────────────────────────────────────────────────────────────
+// BAND PLUGIN (threshold zone shading)
+// ─────────────────────────────────────────────────────────────
+let bandPluginRegistered=false;
+function registerBandPlugin(){
+  if(bandPluginRegistered) return;
+  bandPluginRegistered=true;
+  Chart.register({
+    id:'thresholdBands',
+    beforeDraw(chart){
+      const opt=chart.options.plugins.thresholdBands;
+      if(!opt||!opt.bands) return;
+      const {ctx,chartArea,scales}=chart;
+      const yScale=scales.y;
+      if(!yScale||!chartArea) return;
+      ctx.save();
+      opt.bands.forEach(band=>{
+        const yTop=yScale.getPixelForValue(Math.min(band.y2,yScale.max));
+        const yBot=yScale.getPixelForValue(Math.max(band.y,yScale.min));
+        ctx.fillStyle=band.color;
+        ctx.fillRect(chartArea.left,yTop,chartArea.width,yBot-yTop);
+      });
+      ctx.restore();
+    }
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+// PHASE PANEL — compact row layout (Eaton/Schneider style)
+// ─────────────────────────────────────────────────────────────
+function updatePhasePanel(metric, dataA, dataB, dataC, timestamps){
+  const panel=document.getElementById('phasePanel');
+  const content=document.getElementById('phasePanelContent');
+  const legend=document.getElementById('phaseThreshLegend');
+
+  if(metric==='pf'){
+    // dataA/B/C are the per-phase PF arrays; timestamps array
+    const lastA=dataA[dataA.length-1]||0.95;
+    const lastB=dataB[dataB.length-1]||0.95;
+    const lastC=dataC[dataC.length-1]||0.95;
+    const snap=[
+      {phase:'A', v:lastA, ts:timestamps?timestamps[timestamps.length-1]:''},
+      {phase:'B', v:lastB, ts:timestamps?timestamps[timestamps.length-1]:''},
+      {phase:'C', v:lastC, ts:timestamps?timestamps[timestamps.length-1]:''}
+    ];
+    // Lowest PF = worst phase
+    const lowestPh=snap.reduce((a,b)=>a.v<b.v?a:b).phase;
+
+    content.innerHTML=`
+      <div class="phase-block-title">Power Factor · Per Phase</div>
+      ${snap.map(ph=>{
+        const st=pfStatus(ph.v);
+        const col=pfColor(ph.v);
+        const isWorst=ph.phase===lowestPh;
+        // Scale bar: 0.88–1.0 range
+        const barW=Math.min(Math.max((ph.v-0.88)/0.12*100,0),100).toFixed(0);
+        return`<div class="phase-row">
+          <div class="phase-row-label" style="color:${col}">Phase ${ph.phase}</div>
+          <div class="phase-bar-track">
+            <div class="phase-bar-fill" style="width:${barW}%;background:${col}"></div>
+          </div>
+          <div class="phase-row-val" style="color:${col}">${ph.v}</div>
+          ${isWorst?'<span class="phase-highest-pill" style="background:#fef2f2;color:#DC2626;border-color:#FECACA">lowest</span>':'<span class="phase-highest-pill" style="background:#fef2f2;color:#DC2626;border-color:#FECACA;visibility:hidden">lowest</span>'}
+        </div>
+        <div class="phase-row-ts">At ${ph.ts}</div>`;
+      }).join('')}`;
+
+    legend.innerHTML=`
+      <div class="phase-thresh-title">Power Factor</div>
+      <div class="ptl-row"><div class="ptl-dot" style="background:#16A34A"></div><span style="color:#16A34A;font-weight:600">≥ 0.97</span>&nbsp;Good</div>
+      <div class="ptl-row"><div class="ptl-dot" style="background:#D97706"></div><span style="color:#D97706;font-weight:600">0.95–0.97</span>&nbsp;Approaching</div>
+      <div class="ptl-row"><div class="ptl-dot" style="background:#DC2626"></div><span style="color:#DC2626;font-weight:600">< 0.95</span>&nbsp;Penalty zone</div>`;
+    panel.classList.add('visible');
+    return;
+  }
+
+  const isV=metric==='vunbal';
+  const colorFn=isV?vUnbalColor:cUnbalColor;
+  const statusFn=isV?vUnbalStatus:cUnbalStatus;
+  const maxScale=isV?6:16;
+
+  // last value = most recent period snapshot
+  const snap=[
+    {phase:'A',v:dataA[dataA.length-1]||0,ts:timestamps?timestamps[timestamps.length-1]:''},
+    {phase:'B',v:dataB[dataB.length-1]||0,ts:timestamps?timestamps[timestamps.length-1]:''},
+    {phase:'C',v:dataC[dataC.length-1]||0,ts:timestamps?timestamps[timestamps.length-1]:''}
+  ];
+  const highestPh=snap.reduce((a,b)=>a.v>b.v?a:b).phase;
+
+  content.innerHTML=`
+    <div class="phase-block-title">${isV?'Voltage Unbalance':'Current Unbalance'} · Per Phase (%)</div>
+    ${snap.map(ph=>{
+      const st=statusFn(ph.v);
+      const col=colorFn(ph.v);
+      const isHigh=ph.phase===highestPh;
+      const barW=Math.min(ph.v/maxScale*100,100).toFixed(0);
+      return`<div class="phase-row">
+        <div class="phase-row-label" style="color:${col}">Phase ${ph.phase}</div>
+        <div class="phase-bar-track">
+          <div class="phase-bar-fill" style="width:${barW}%;background:${col}"></div>
+        </div>
+        <div class="phase-row-val" style="color:${col}">${ph.v}%</div>
+        ${isHigh?'<span class="phase-highest-pill">highest</span>':'<span class="phase-highest-pill" style="visibility:hidden">highest</span>'}
+      </div>
+      <div class="phase-row-ts">Peak at ${ph.ts}</div>`;
+    }).join('')}`;
+
+  legend.innerHTML = isV
+    ? `<div class="phase-thresh-title">Voltage Unbalance</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#16A34A"></div><span style="color:#16A34A;font-weight:600">< 1%</span>&nbsp;Ideal</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#D97706"></div><span style="color:#D97706;font-weight:600">1–3%</span>&nbsp;Slightly Elevated</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#EA580C"></div><span style="color:#EA580C;font-weight:600">3–5%</span>&nbsp;Warning</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#DC2626"></div><span style="color:#DC2626;font-weight:600">> 5%</span>&nbsp;Critical</div>`
+    : `<div class="phase-thresh-title">Current Unbalance</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#16A34A"></div><span style="color:#16A34A;font-weight:600">< 2%</span>&nbsp;Ideal</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#D97706"></div><span style="color:#D97706;font-weight:600">2–5%</span>&nbsp;Slightly Elevated</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#EA580C"></div><span style="color:#EA580C;font-weight:600">5–10%</span>&nbsp;Warning</div>
+       <div class="ptl-row"><div class="ptl-dot" style="background:#DC2626"></div><span style="color:#DC2626;font-weight:600">> 10%</span>&nbsp;Critical</div>`;
+
+  panel.classList.add('visible');
+}
+
+function pfRow(lbl, val, st, ts, sub){
+  return`<div class="phase-row">
+    <div class="phase-row-label" style="color:${st.color}">${lbl}${sub?'<span style="font-size:9px;color:#a0aec0;font-weight:400;margin-left:3px">${sub}</span>':''}</div>
+    <div class="phase-bar-track">
+      <div class="phase-bar-fill" style="width:${((parseFloat(val)-0.88)/0.12*100).toFixed(0)}%;background:${st.color}"></div>
+    </div>
+    <div class="phase-row-val" style="color:${st.color}">${val}</div>
+    <div style="font-size:9px;padding:1px 6px;border-radius:3px;background:${st.bg};color:${st.color};border:1px solid ${st.border};white-space:nowrap;margin-left:6px">${st.label}</div>
+  </div>`;
+}
+
+function hidePhasePanel(){
+  document.getElementById('phasePanel').classList.remove('visible');
+}
+
+// ─────────────────────────────────────────────────────────────
+// TOOLTIP STRIP
+// ─────────────────────────────────────────────────────────────
+function updateTooltipStrip(mode){
+  const strip=document.getElementById('tooltipStrip');
+  const b2=document.getElementById('ttBlock2');
+  const d=document.getElementById('ttDate');
+  if(mode==='irradiance'){
+    strip.style.display='flex';
+    d.textContent='06/21/2026 01:00';
+    document.getElementById('ttIrr').textContent='0 W/m²';
+    b2.style.display='flex';
+    strip.innerHTML=`
+      <div class="tooltip-block">
+        <div class="tooltip-date">06/21/2026 01:00</div>
+        <div class="tooltip-item">
+          <div class="tooltip-swatch" style="background:#4a90d9"></div>
+          <span class="tooltip-label">Kipp&amp;Zonen RT1 Solar Irradiance</span>
+          <span class="tooltip-val">0 W/m²</span>
+        </div>
+      </div>
+      <div class="tooltip-block">
+        <div style="height:18px"></div>
+        <div class="tooltip-item">
+          <div class="tooltip-swatch" style="background:#1a2236"></div>
+          <span class="tooltip-label">Virtual Meter Measured Production</span>
+          <span class="tooltip-val">0 kW</span>
+        </div>
+      </div>`;
+  } else if(mode==='vunbal'){
+    strip.innerHTML=`
+      <div class="tooltip-block">
+        <div class="tooltip-date" style="font-weight:600;color:#374151">Voltage Unbalance — 3 phases over time</div>
+        <div class="tooltip-item" style="margin-top:4px;font-size:10.5px;color:#718096">
+          Line colour reflects threshold zone. Hover for Phase A / B / C values and peak timestamp. Phase summary in panel below.
+        </div>
+      </div>`;
+  } else if(mode==='cunbal'){
+    strip.innerHTML=`
+      <div class="tooltip-block">
+        <div class="tooltip-date" style="font-weight:600;color:#374151">Current Unbalance — 3 phases over time</div>
+        <div class="tooltip-item" style="margin-top:4px;font-size:10.5px;color:#718096">
+          Line colour reflects threshold zone. Hover for Phase A / B / C values and peak timestamp. Phase summary in panel below.
+        </div>
+      </div>`;
+  } else if(mode==='pf'){
+    strip.innerHTML=`
+      <div class="tooltip-block">
+        <div class="tooltip-date" style="font-weight:600;color:#374151">Power Factor — 3 phases over time</div>
+        <div class="tooltip-item" style="margin-top:4px;font-size:10.5px;color:#718096">
+          Line colour reflects threshold zone. Hover for per-phase values and timestamp. Phase summary in panel below.
+        </div>
+      </div>`;
+  } else if(mode==='pqevents'){
+    strip.innerHTML=`
+      <div class="tooltip-block">
+        <div class="tooltip-date" style="color:#718096;font-style:italic">Hover a bar to see counts</div>
+      </div>`;
+  } else if(['eui','lf','pd','mom'].includes(mode)){
+    const tRangeVal=document.getElementById('timeRangeSelect').value;
+    const isMomYoY=(mode==='mom'&&(tRangeVal==='ytd'||tRangeVal==='last-year'));
+    const titles={eui:'EUI (kWh/m²)',lf:'Load Factor',pd:'Peak Demand',mom:'Energy Change'};
+    const legendHtml={
+      eui:`<div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:3px">EUI vs Portfolio avg (${PORT_EUI_AVG})</div>
+           <div style="font-size:10px;color:#16A34A">🟢 Excellent → >30% below avg</div>
+           <div style="font-size:10px;color:#16A34A">🟢 Good → 15–30% below avg</div>
+           <div style="font-size:10px;color:#D97706">🟡 Average → within ±15%</div>
+           <div style="font-size:10px;color:#EA580C">🟠 Below Target → 15–30% above</div>
+           <div style="font-size:10px;color:#DC2626">🔴 Poor → >30% above</div>`,
+      lf:`<div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:3px">Load Factor (Avg kW ÷ Peak kW)</div>
+          <div style="font-size:10px;color:#16A34A">🟢 Excellent → ≥ 0.80</div>
+          <div style="font-size:10px;color:#16A34A">🟢 Good → 0.70–0.80</div>
+          <div style="font-size:10px;color:#D97706">🟡 Average → 0.50–0.70</div>
+          <div style="font-size:10px;color:#DC2626">🔴 Poor → < 0.50</div>`,
+      pd:``,
+      mom:`<div style="font-size:10px;font-weight:700;color:#374151;margin-bottom:3px">Energy Change</div>
+           <div style="font-size:10px;color:#16A34A">🟢 ≤ -3% On target</div>
+           <div style="font-size:10px;color:#D97706">🟡 -3% to 0% Improving</div>
+           <div style="font-size:10px;color:#DC2626">🔴 > 0% Increasing</div>`
+    };
+    const leftBlock=(mode==='eui'||mode==='lf'||mode==='mom')
+      ? `<div class="tooltip-block">
+           <div class="tooltip-date">${titles[mode]}</div>
+           <div class="tooltip-item"><span class="tooltip-label" style="font-style:italic;color:#a0aec0">${
+             mode==='mom'
+               ? 'Bar colour reflects % change vs prior period'
+               : 'Bar color reflects threshold zone'
+           }</span></div>
+         </div>`
+      : '';
+    strip.innerHTML=`
+      ${leftBlock}
+      ${legendHtml[mode]?`<div class="tooltip-block" style="align-self:center;padding:8px 12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px">${legendHtml[mode]}</div>`:''}
+    `;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// CHECKBOX HANDLERS
+// ─────────────────────────────────────────────────────────────
+const PERIOD_KPIS=['eui','lf','pd','mom'];
+const PQ_CONTINUOUS=['vunbal','cunbal','pf'];
+
+function clearAllKPICheckboxes(except){
+  // Uncheck all exclusive KPIs
+  [...PQ_CONTINUOUS,...PERIOD_KPIS,'sag','swell'].forEach(k=>{
+    if(k===except) return;
+    const el=document.getElementById('cb_'+k);
+    if(el) el.checked=false;
+  });
+}
+
+function handlePQContinuousChange(cb, metric){
+  if(cb.checked){
+    clearAllKPICheckboxes(metric);
+    chartMode=metric;
+    setGranularityMode('continuous'); // PQ = real-time continuous readings, not period aggregates
+    hidePhasePanel();
+    render();
+  } else {
+    chartMode='irradiance';
+    hidePhasePanel();
+    setGranularityMode('continuous');
+    render();
+  }
+}
+
+function handlePQEventChange(){
+  const sag=document.getElementById('cb_sag').checked;
+  const swell=document.getElementById('cb_swell').checked;
+  if(sag||swell){
+    clearAllKPICheckboxes(sag?'sag':'swell');
+    if(sag) document.getElementById('cb_sag').checked=true;
+    if(swell) document.getElementById('cb_swell').checked=true;
+    chartMode='pqevents'; // set BEFORE setGranularityMode
+    setGranularityMode('period');
+    hidePhasePanel();
+    render();
+  } else {
+    chartMode='irradiance';
+    hidePhasePanel();
+    setGranularityMode('continuous');
+    render();
+  }
+}
+
+function handlePeriodKPIChange(cb, metric){
+  if(cb.checked){
+    clearAllKPICheckboxes(metric);
+    chartMode=metric; // set BEFORE setGranularityMode
+    // On first activation, jump the time range to the KPI's preferred default
+    // so the user lands on the most meaningful view immediately
+    const tRange=document.getElementById('timeRangeSelect');
+    const tDefaults={eui:'12months', lf:'month', pd:'12months', mom:'month'};
+    const preferred=tDefaults[metric]||'month';
+    if(!['month','last-month','12months','ytd','lifetime'].includes(tRange.value)){
+      // current time range not valid for this KPI at all — force to preferred
+      tRange.value=preferred;
+    } else if(tDefaults[metric]){
+      // valid range but not the ideal one — snap to preferred default
+      tRange.value=preferred;
+    }
+    setGranularityMode('period');
+    hidePhasePanel();
+    render();
+  } else {
+    chartMode='irradiance';
+    setGranularityMode('continuous');
+    hidePhasePanel();
+    render();
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// GRANULARITY / TIME RANGE MODE
+// Rules per chart mode:
+//
+// irradiance / pq-continuous (vunbal, cunbal, pf):
+//   Time:     Today, 3 Days, This Week, Last Week  (no monthly — PQ is operational)
+//   Interval: 1min, 5min, 15min, 1hr  (sub-daily only)
+//   irradiance also allows This Month for broader trend
+//
+// pqevents:
+//   Time:     Today → Last 12 Months
+//   Interval: 1 Day, 7 Days, 1 Month  (events counted per period)
+//
+// eui / lf / pd:
+//   Time:     This Month, Last Month, Last 12 Months, YTD, Lifetime
+//   Interval: 1 Day, 1 Month, 1 Year
+//
+// mom:
+//   Time:     This Month + Last Month ONLY (locked, no choice)
+//   Interval: 1 Month (locked)
+// ─────────────────────────────────────────────────────────────
+function setGranularityMode(mode){
+  const gran=document.getElementById('granSelect');
+  const tRange=document.getElementById('timeRangeSelect');
+  const note=document.getElementById('granDisabledNote');
+
+  if(mode==='continuous'){
+    const isPQCont=['vunbal','cunbal','pf'].includes(chartMode);
+    // PQ continuous: today/3days/week/last-week only; irradiance also allows month
+    const timeAllowed=isPQCont
+      ? ['today','3days','week','last-week']
+      : ['today','3days','week','last-week','month'];
+    const granAllowed=['1min','5min','15min','1hr'];
+    _setOpts(tRange, timeAllowed, ['3days','today','week']);
+    _setOpts(gran,   granAllowed, ['15min','5min','1hr']);
+    gran.disabled=false;
+    note.style.display='none';
+
+  } else if(mode==='period'){
+    if(chartMode==='mom'){
+      // MoM/WoW/YoY: allowed time ranges determine comparison type; interval locks to match
+      _setOpts(tRange, ['week','last-week','month','last-month','12months'], ['month']);
+      const trVal=tRange.value;
+      const isWoW=(trVal==='week'||trVal==='last-week');
+      const isRolling=(trVal==='12months');
+      const lockedGran=isWoW?'7days':'month';
+      _setOpts(gran, [lockedGran], [lockedGran]);
+      gran.disabled=true;
+      note.textContent=isRolling?'Trend — fixed':isWoW?'WoW — fixed':'MoM — fixed';
+      note.style.display='inline';
+
+    } else if(chartMode==='pqevents'){
+      _setOpts(tRange, ['today','3days','week','last-week','month','last-month','12months'], ['month','3days','week']);
+      _setOpts(gran,   ['day','7days','month'],  ['day','7days']);
+      gran.disabled=false;
+      note.textContent='Period KPI mode';
+      note.style.display='inline';
+
+    } else {
+      const trVal=tRange.value;
+
+      function idealGran(kpi, tr){
+        if(kpi==='lf'||kpi==='eui'){
+          if(tr==='month'||tr==='last-month') return 'day';
+          if(tr==='12months'||tr==='ytd')     return 'month';
+          return 'year';
+        }
+        if(kpi==='pd'){
+          if(tr==='month'||tr==='last-month') return 'day';
+          if(tr==='lifetime')                 return 'year';
+          return 'month';
+        }
+        return 'month';
+      }
+
+      const ideal=idealGran(chartMode, trVal);
+
+      // Enable/disable time range options
+      Array.from(tRange.options).forEach(o=>{
+        o.disabled=!['month','last-month','12months','ytd','lifetime'].includes(o.value);
+      });
+
+      // Enable/disable gran options
+      Array.from(gran.options).forEach(o=>{
+        o.disabled=!['day','month','year'].includes(o.value);
+      });
+
+      // Always force gran to ideal — this is the auto-snap
+      gran.value=ideal;
+      gran.disabled=false;
+      note.textContent='Period KPI mode';
+      note.style.display='inline';
+    }
+  }
+  updateDateLabel();
+}
+
+// Helper: disable options not in allowed list, enable those that are, select best valid value
+function _setOpts(sel, allowedVals, preferred){
+  const prev=sel.value;
+  Array.from(sel.options).forEach(opt=>{
+    opt.disabled=!allowedVals.includes(opt.value);
+  });
+  // Pick selection: keep prev if still allowed, else first preferred that's allowed
+  const toSelect=[prev,...preferred].find(v=>allowedVals.includes(v));
+  if(toSelect) sel.value=toSelect;
+}
+
+// ─────────────────────────────────────────────────────────────
+// TIME RANGE
+// ─────────────────────────────────────────────────────────────
+function onTimeRangeChange(){
+  // Re-run granularity gating so interval auto-snaps to ideal for the new time range
+  if(chartMode==='mom') setGranularityMode('period');
+  else if([...PERIOD_KPIS,'pqevents'].includes(chartMode)) setGranularityMode('period');
+  updateDateLabel();
+  render();
+}
+
+function updateDateLabel(){
+  const sel=document.getElementById('timeRangeSelect').value;
+  const map={
+    'today':       'Jun 23, 2026 – Jun 23, 2026',
+    '3days':       'Jun 21, 2026 – Jun 23, 2026',
+    'week':        'Jun 17, 2026 – Jun 23, 2026',
+    'last-week':   'Jun 10, 2026 – Jun 16, 2026',
+    'month':       'Jun 1, 2026 – Jun 23, 2026',
+    'last-month':  'May 1, 2026 – May 31, 2026',
+    'ytd':         'Jan 1, 2026 – Jun 23, 2026',
+    'last-year':   'Jan 1, 2025 – Dec 31, 2025',
+    '12months':    'Jun 2025 – Jun 2026',
+    'ytd':         'Jan 1, 2026 – Jun 23, 2026',
+    'lifetime':    'All Time',
+    'custom':      'Custom Range'
+  };
+  document.getElementById('dateRangeLabel').textContent=map[sel]||'Jun 21, 2026 – Jun 23, 2026';
+}
+
+function shiftDate(dir){
+  // Just update label for demo
+  const lbl=document.getElementById('dateRangeLabel');
+  lbl.textContent= dir>0?'Jun 24, 2026 – Jun 26, 2026':'Jun 18, 2026 – Jun 20, 2026';
+}
+
+// ─────────────────────────────────────────────────────────────
+// VIEW SWITCH (Chart / Table)
+// ─────────────────────────────────────────────────────────────
+function switchView(view){
+  currentView=view;
+  document.getElementById('chartTabBtn').className='chart-tab'+(view==='chart'?' active':'');
+  document.getElementById('tableTabBtn').className='chart-tab'+(view==='table'?' active':'');
+  document.getElementById('chartView').style.display=view==='chart'?'flex':'none';
+  document.getElementById('tableView').style.display=view==='table'?'block':'none';
+  if(view==='table') renderTable();
+  else render();
+}
+
+// ─────────────────────────────────────────────────────────────
+// TABLE RENDERING
+// ─────────────────────────────────────────────────────────────
+function renderTable(){
+  const thead=document.getElementById('tableHead');
+  const tbody=document.getElementById('tableBody');
+  const gran=document.getElementById('granSelect').value;
+  const timeRange=document.getElementById('timeRangeSelect').value;
+
+  if(chartMode==='pqevents'){
+    thead.innerHTML=`<tr><th>Timestamp</th><th>Type</th><th>Phase</th><th>Magnitude</th><th>Duration</th><th>Severity</th></tr>`;
+    const rows=genPQEventTable();
+    tbody.innerHTML=rows.map(r=>`<tr>
+      <td>${r.ts}</td>
+      <td><span class="sev-badge ${r.type==='Sag'?'sev-sag':'sev-swell'}">${r.type}</span></td>
+      <td>${r.phase}</td>
+      <td>${r.mag}</td>
+      <td>${r.dur}</td>
+      <td style="color:${r.sevColor};font-weight:600">${r.sev}</td>
+    </tr>`).join('');
+  } else if(chartMode==='vunbal'||chartMode==='cunbal'){
+    const isV=chartMode==='vunbal';
+    thead.innerHTML=`<tr><th>Timestamp</th><th>Phase A (%)</th><th>Phase B (%)</th><th>Phase C (%)</th><th>Highest Phase</th><th>Status</th></tr>`;
+    const statusFn=isV?vUnbalStatus:cUnbalStatus;
+    const rows=Array.from({length:20},(_,i)=>{
+      const ts=new Date('2026-06-21T00:00:00'); ts.setMinutes(i*15);
+      const ranges=isV
+        ? {a:[0.4,1.6],b:[2.8,4.2],c:[0.6,1.8]}
+        : {a:[1.2,4.8],b:[5.5,13.5],c:[2.0,6.5]};
+      const a=+(ranges.a[0]+(ranges.a[1]-ranges.a[0])*seededRand(i*2)).toFixed(2);
+      const b=+(ranges.b[0]+(ranges.b[1]-ranges.b[0])*seededRand(i*3+1)).toFixed(2);
+      const c=+(ranges.c[0]+(ranges.c[1]-ranges.c[0])*seededRand(i*5+2)).toFixed(2);
+      const highest=Math.max(a,b,c);
+      const highestPh=highest===a?'A':highest===b?'B':'C';
+      const st=statusFn(highest);
+      return{ts:fmtDT(ts),a:a+'%',b:b+'%',c:c+'%',high:`Phase ${highestPh} – ${highest}%`,color:st.color,status:st.label};
+    });
+    tbody.innerHTML=rows.map(r=>`<tr>
+      <td>${r.ts}</td>
+      <td style="color:${isV?vUnbalColor(parseFloat(r.a)):cUnbalColor(parseFloat(r.a))};font-weight:600">${r.a}</td>
+      <td style="color:${isV?vUnbalColor(parseFloat(r.b)):cUnbalColor(parseFloat(r.b))};font-weight:600">${r.b}</td>
+      <td style="color:${isV?vUnbalColor(parseFloat(r.c)):cUnbalColor(parseFloat(r.c))};font-weight:600">${r.c}</td>
+      <td style="font-weight:600">${r.high}</td>
+      <td style="color:${r.color};font-weight:600">${r.status}</td>
+    </tr>`).join('');
+  } else if(chartMode==='pf'){
+    thead.innerHTML=`<tr><th>Timestamp</th><th>Power Factor</th><th>Status</th><th>vs Threshold</th></tr>`;
+    const rows=Array.from({length:20},(_,i)=>{
+      const ts=new Date('2026-06-21T00:00:00'); ts.setMinutes(i*15);
+      const v=+(0.920+seededRand(i*4)*0.065).toFixed(3);
+      const st=pfStatus(v);
+      const thresh=v>=0.97?`+${((v-0.97)*100).toFixed(1)}% above good threshold`
+                  :v>=0.95?`Within ${((v-0.95)*100).toFixed(1)}% of penalty zone`
+                  :`${((0.95-v)*100).toFixed(1)}% below — penalty applies`;
+      return{ts:fmtDT(ts),v,st,thresh};
+    });
+    tbody.innerHTML=rows.map(r=>`<tr>
+      <td>${r.ts}</td>
+      <td style="font-weight:700;color:${pfColor(r.v)}">${r.v}</td>
+      <td><span style="background:${r.st.bg};color:${r.st.color};border:1px solid ${r.st.border};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">${r.st.label}</span></td>
+      <td style="font-size:11px;color:#718096">${r.thresh}</td>
+    </tr>`).join('');
+  } else if(['eui','lf','pd','mom'].includes(chartMode)){
+    const {labels,current,prior}=genPeriodData(chartMode,gran,timeRange);
+    function momColor(v){ return v<=-3?'#16A34A':v<=0?'#D97706':'#DC2626'; }
+    function momLbl(v){ return v<=-3?'On Target':v<=0?'Improving':'Increasing'; }
+    if(chartMode==='mom'){
+      thead.innerHTML=`<tr><th>Period</th><th>Energy Change</th><th>Status</th></tr>`;
+      tbody.innerHTML=labels.map((l,i)=>{
+        const v=current[i]; const col=momColor(v);
+        return`<tr>
+          <td>${l}</td>
+          <td style="color:${col};font-weight:700">${v>0?'+':''}${v}%</td>
+          <td><span style="background:${v<=-3?'#F0FDF4':v<=0?'#FFFBEB':'#FEF2F2'};color:${col};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">${momLbl(v)}</span></td>
+        </tr>`;
+      }).join('');
+    } else if(chartMode==='pd'){
+      thead.innerHTML=`<tr><th>Period</th><th>Peak kW</th><th>Avg kW</th></tr>`;
+      tbody.innerHTML=labels.map((l,i)=>{
+        return`<tr>
+          <td>${l}</td>
+          <td style="color:#374151;font-weight:700">${current[i]} kW</td>
+          <td style="color:#9CA3AF;font-weight:600">${prior[i]} kW</td>
+        </tr>`;
+      }).join('');
+    } else if(chartMode==='lf'){
+      thead.innerHTML=`<tr><th>Period</th><th>Load Factor</th><th>Status</th></tr>`;
+      tbody.innerHTML=labels.map((l,i)=>{
+        const v=current[i]; const st=lfStatus(v);
+        return`<tr>
+          <td>${l}</td>
+          <td style="color:${st.color};font-weight:700">${v}</td>
+          <td><span style="background:${st.bg};color:${st.color};border:1px solid ${st.border};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">${st.label}</span></td>
+        </tr>`;
+      }).join('');
+    } else {
+      // EUI
+      thead.innerHTML=`<tr><th>Period</th><th>EUI (kWh/m²)</th><th>vs Portfolio (${PORT_EUI_AVG})</th><th>Rating</th></tr>`;
+      tbody.innerHTML=labels.map((l,i)=>{
+        const v=current[i]; const col=euiBarColor(v); const lbl=euiLabel(v);
+        const pct=((v/PORT_EUI_AVG-1)*100).toFixed(1);
+        return`<tr>
+          <td>${l}</td>
+          <td style="font-weight:700">${v}</td>
+          <td style="color:${col};font-weight:600">${pct>0?'+':''}${pct}%</td>
+          <td style="color:${col};font-weight:600">${lbl}</td>
+        </tr>`;
+      }).join('');
+    }
+  } else {
+    // Irradiance default
+    thead.innerHTML=`<tr><th>Timestamp</th><th>Solar Irradiance (W/m²)</th><th>Measured Production (kW)</th></tr>`;
+    const {labels,irr,prod}=genIrradianceData(30);
+    tbody.innerHTML=labels.map((l,i)=>`<tr>
+      <td>${fmtDT(l)}</td><td>${irr[i]}</td><td>${prod[i]}</td>
+    </tr>`).join('');
+  }
+}
+
+function genPQEventTable(){
+  const types=['Sag','Swell'];
+  const phases=['Phase A','Phase B','Phase C','All Phases'];
+  const rows=[];
+  for(let i=0;i<25;i++){
+    const type=types[Math.round(seededRand(i*3))];
+    const phase=phases[Math.floor(seededRand(i*7)*4)];
+    const ts=new Date('2026-06-21T00:00:00'); ts.setMinutes(i*35+Math.floor(seededRand(i)*20));
+    const mag=type==='Sag'?(65+Math.floor(seededRand(i*4)*25))+'% nominal':(110+Math.floor(seededRand(i*4)*15))+'% nominal';
+    const dur=(50+Math.floor(seededRand(i*9)*500))+'ms';
+    const sev=type==='Sag'?(seededRand(i*11)>0.7?'High':'Medium'):'Low';
+    const sevColor=sev==='High'?'#e53e3e':sev==='Medium'?'#d69e2e':'#38a169';
+    rows.push({ts:fmtDT(ts),type,phase,mag,dur,sev,sevColor});
+  }
+  return rows;
+}
+
+function fmtDT(d){
+  if(!(d instanceof Date)) return d;
+  return (d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getDate().toString().padStart(2,'0')+'/'+d.getFullYear()+' '+d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+}
+
+// ─────────────────────────────────────────────────────────────
+// PQ GROUP TOGGLE
+// ─────────────────────────────────────────────────────────────
+// togglePQGroup removed — PQ moved to Built-In panel
+function togglePQGroup(){return; // no-op
+  if(grp.style.display==='none'){grp.style.display='';caret.textContent='▼';}
+  else{grp.style.display='none';caret.textContent='▶';}
+}
+
+// ─────────────────────────────────────────────────────────────
+// RESIZE HANDLING
+// ─────────────────────────────────────────────────────────────
+let resizeTimer;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{if(currentView==='chart')render();},200);
+});
+
+// ─────────────────────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded',()=>{
+  // Need Chart.js adapter for time axis
+  // Inline minimal time adapter
+  if(window.Chart && !Chart._adapters._date){
+    Chart.register({
+      id:'_date',
+      override:{
+        formats(){return{datetime:'MMM d, yyyy, h:mm:ss aaaa',millisecond:'h:mm:ss.SSS aaaa',second:'h:mm:ss aaaa',minute:'h:mm aaaa',hour:'hA',day:'MMM d',week:'PP',month:'MMM yyyy',quarter:'qqq – yyyy',year:'yyyy'}},
+        parse(value){if(value===null||value===undefined){return null;}if(value instanceof Date){return value.getTime();}if(typeof value==='number'){return value;}if(typeof value==='string'){const d=new Date(value);return isNaN(d.getTime())?null:d.getTime();}return null},
+        format(time,fmt){const d=new Date(time);return d.toLocaleString()},
+        add(time,amount,unit){const d=new Date(time);if(unit==='day')d.setDate(d.getDate()+amount);else if(unit==='hour')d.setHours(d.getHours()+amount);else if(unit==='minute')d.setMinutes(d.getMinutes()+amount);return d.getTime()},
+        diff(max,min,unit){const ms=max-min;if(unit==='day')return ms/86400000;if(unit==='hour')return ms/3600000;if(unit==='minute')return ms/60000;return ms},
+        startOf(time,unit,weekday){const d=new Date(time);if(unit==='day'){d.setHours(0,0,0,0);}else if(unit==='hour'){d.setMinutes(0,0,0);}else if(unit==='minute'){d.setSeconds(0,0);}return d.getTime()},
+        endOf(time,unit){const d=new Date(time);if(unit==='day'){d.setHours(23,59,59,999);}return d.getTime()}
+      }
+    });
+  }
+  render();
+});
+</script>
+
+<!-- Inject Chart.js date adapter via luxon cdn -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-luxon/1.3.1/chartjs-adapter-luxon.umd.min.js"></script>
+</body>
+</html>
